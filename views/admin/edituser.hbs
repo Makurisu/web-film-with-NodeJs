@@ -1,0 +1,123 @@
+<div class="container bg-light rounded d-flex justify-content-between">
+	<div class="col-8 ">
+		<div class="mb-3 mt-3"><a><strong>
+					<u>
+						<h2>#{{thatuser.id}}</h2>
+					</u>
+				</strong></a>
+		</div>
+
+		<div class="mb-3 mt-3">
+			<label for="username" class="form-label">Username:</label>
+			<input iduser="{{thatuser.id}}" type="username" class="form-control" id="name"
+				placeholder="{{thatuser.username}}" name="username">
+		</div>
+
+		<div class="mb-3">
+			<label for="email" class="form-label">Email:</label>
+			<input type="email" class="form-control" id="email" placeholder="{{thatuser.email}}" name="email">
+		</div>
+
+		<div class="form-check mb-3">
+			<label class="form-check-label">
+				<input id="role" class="form-check-input" type="checkbox" name="role" {{#when thatuser.role 'eq' 'admin'
+					}} checked{{/when}}> Admin role
+			</label>
+		</div>
+		<div class="mb-3"><button id="updatebutt" class="btn btn-primary">Save</button></div>
+	</div>
+</div>
+</div>
+
+
+
+<!-- Modal -->
+<div class="modal fade" id="updateModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="exampleModalLabel">Xác nhận thay đổi?</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body" id="contentDeleteuser">
+				Các thông tin của người dùng sẽ được kiểm tra và thay đổi.
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-danger" id="updateuser">Update</button>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+	function notice(type, css, msg) {
+		this.type = type;
+		this.css = css;
+		this.msg = msg;
+	}
+	function showToast(t) {
+		toastr.options.positionClass = t.css;
+		toastr[t.type](t.msg);
+	}
+	toastr.options.positionClass = "toast-top-right";
+	toastr.options.extendedTimeOut = 1000;
+	toastr.options.timeOut = 1000;
+	toastr.options.fadeOut = 250;
+	toastr.options.fadeIn = 250;
+	//delete user
+	$(document).on('click', '#updatebutt', function () {
+		let id = $('#name').attr('iduser');
+		let name = $('#name').val();
+		let email = $('#email').val();
+		let role = $('#role').val();
+		if (role === 'on') {
+			role = 'admin';
+		}
+		else {
+			role = 'user';
+		}
+        if (name ==='')
+            name = $('#name').attr('placeholder');
+        if (email === '')
+            email = $('#email').attr('placeholder');
+		$('#updateuser').attr('iduser', id);
+		$('#updateuser').attr('name', name);
+		$('#updateuser').attr('email', email);
+		$('#updateuser').attr('role', role);
+		$('#updateModal').modal('toggle');
+	})
+	
+	$(document).on('click', '#updateuser', function () {
+		let iduser = $('#updateuser').attr('iduser');
+		let username = $('#updateuser').attr('name');
+		let email = $('#updateuser').attr('email');
+		let role = $('#updateuser').attr('role');
+        
+		$.ajax({
+			url: '/admin/user/',
+			type: "PUT",
+			contentType: "application/json; charset=utf-8",
+			dataType: "json",
+			headers: {
+				"X-CSRF-Token": $("#csrf").val(),
+			},
+			data: JSON.stringify({
+				id: iduser, update: {
+					username,
+					email,
+					role
+				}
+			}),
+			success: function (data) {
+                showToast(new notice("success", "toast-top-right", data.msg))
+				window.location.href = `/admin/user/${iduser}`
+            },
+            error: function (data) {
+                showToast(new notice("error", "toast-top-right", data.responseJSON.err))
+            }
+		})
+	})
+
+</script>
